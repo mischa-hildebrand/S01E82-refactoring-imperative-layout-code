@@ -8,24 +8,38 @@
 
 import UIKit
 
-func flowLayout(containerSize: CGSize, spacing: UIOffset = UIOffset(horizontal: 10, vertical: 10), sizes: [CGSize]) -> [CGRect] {
-    var current = CGPoint.zero
-    var lineHeight = 0 as CGFloat
-
-    var result: [CGRect] = []
-    for size in sizes {
-        if current.x + size.width > containerSize.width {
-            current.x = 0
-            current.y += lineHeight + spacing.vertical
-            lineHeight = 0
-        }
-        defer {
-            lineHeight = max(lineHeight, size.height)
-            current.x += size.width + spacing.horizontal
-        }
-        result.append(CGRect(origin: current, size: size))
+/// The struct itself is independent of the particular views.
+/// As such, its logic can be tested independently of the actual view hierarchy.
+struct FlowLayout {
+    
+    let containerSize: CGSize
+    let spacing: UIOffset
+    
+    init(containerSize: CGSize, spacing: UIOffset = UIOffset(horizontal: 10, vertical: 10)) {
+        self.containerSize = containerSize
+        self.spacing = spacing
     }
-    return result
+    
+    func frames(for sizes: [CGSize]) -> [CGRect] {
+        var current = CGPoint.zero
+        var lineHeight = 0 as CGFloat
+        
+        var result: [CGRect] = []
+        for size in sizes {
+            if current.x + size.width > containerSize.width {
+                current.x = 0
+                current.y += lineHeight + spacing.vertical
+                lineHeight = 0
+            }
+            defer {
+                lineHeight = max(lineHeight, size.height)
+                current.x += size.width + spacing.horizontal
+            }
+            result.append(CGRect(origin: current, size: size))
+        }
+        return result
+    }
+
 }
 
 final class ButtonsView: UIView {
@@ -33,9 +47,10 @@ final class ButtonsView: UIView {
         super.layoutSubviews()
         
         let sizes = subviews.map { $0.intrinsicContentSize }
-        let frames = flowLayout(containerSize: bounds.size, sizes: sizes)
-        for (idx, frame) in frames.enumerated() {
-            subviews[idx].frame = frame
+        let flowLayout = FlowLayout(containerSize: bounds.size)
+        let newFrames = flowLayout.frames(for: sizes)
+        for (index, view) in subviews.enumerated() {
+            view.frame = newFrames[index]
         }
     }
 }
