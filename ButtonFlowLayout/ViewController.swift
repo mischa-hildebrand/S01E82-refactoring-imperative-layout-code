@@ -42,16 +42,25 @@ struct FlowLayout {
 
 }
 
+/// This extension is dependent on the particular views
+/// and only provides a convenience method.
+extension FlowLayout {
+    
+    func layout(views: [UIView]) {
+        let sizes = views.map { $0.intrinsicContentSize }
+        let newFrames = frames(for: sizes)
+        for (index, view) in views.enumerated() {
+            view.frame = newFrames[index]
+        }
+    }
+}
+
 final class ButtonsView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        let sizes = subviews.map { $0.intrinsicContentSize }
         let flowLayout = FlowLayout(containerSize: bounds.size)
-        let newFrames = flowLayout.frames(for: sizes)
-        for (index, view) in subviews.enumerated() {
-            view.frame = newFrames[index]
-        }
+        flowLayout.layout(views: subviews)
     }
 }
 
